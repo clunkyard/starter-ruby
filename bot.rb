@@ -90,24 +90,7 @@ class Starter < CY::Robot
       climb = zone.shape=='sphere' ? angles.elevation_to(position,zone.center) : 0
       drive.set(throttle: 0.8, turn: angles.clamp(angles.angle_diff(angles.bearing_to(position,zone.center),me.heading)/30), pitch_turn: angles.clamp((climb-me.pitch)/30))
     end
-    work = raw.number('state.calibration.work')
-    status.set('WORK',calibration_work(work.to_i,clock.tick)) if work && work.positive?
   end
-end
-
-# The calibration kernel, xorshift-sqrt v1: work rounds of a 64-bit xorshift
-# and a square-root sum.
-def calibration_work(work, tick)
-  mask = 0xFFFFFFFFFFFFFFFF
-  x = 88_172_645_463_325_252 ^ tick
-  total = 0.0
-  work.times do
-    x ^= (x << 13) & mask
-    x ^= x >> 7
-    x ^= (x << 17) & mask
-    total += Math.sqrt(x >> 11)
-  end
-  (total.floor + (x >> 40)) % 1_000_000
 end
 
 CY.run(Starter.new) if $PROGRAM_NAME == __FILE__
